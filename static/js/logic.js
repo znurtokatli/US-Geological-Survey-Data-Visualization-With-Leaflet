@@ -8,7 +8,8 @@ var tectonicPlatesMap;
 var mapLayers = { "Satellite" : "mapbox.satellite",
                   "Grayscale" : "light-v10",
                   "Outdoors"  :  "mapbox.outdoors" };
-var baseMaps = {};                
+var baseMaps = {};   
+var tileLayers = [];             
 
 //set map color for coordinates depth
 function pickColor(depth) {
@@ -64,9 +65,9 @@ function createGeoMap(earthquakesData, tectonicPlatesData) {
             accessToken: API_KEY
         })
 
-        baseMaps.push(layer, tileLayer);
+        //baseMaps.push(layer, tileLayer);
         tileLayers.push(tileLayer);
-        //baseMaps[layer] = tileLayer; 
+        baseMaps[layer] = tileLayer; 
     }
 
     var overlayMaps = { 
@@ -77,7 +78,7 @@ function createGeoMap(earthquakesData, tectonicPlatesData) {
     var geoMap = L.map("mapid", {
         center: [40.73, -74.0059],
         zoom: 12,
-        layers: [tileLayers, earthquakesData, tectonicPlatesData]
+        layers: [tileLayers[0], earthquakesData, tectonicPlatesData]  //???multiple tile layers
     });
 
     //layer control
@@ -99,11 +100,15 @@ function createGeoMap(earthquakesData, tectonicPlatesData) {
 
     document.querySelector(".legend").innerHTML = showLegend();
 };  
+ 
 
 //retrieve earthquake & tectonic plates data from links 
-d3.json(tectonicPlatesLink, function(data) {
+d3.json(earthquakeLink).then(function(data) {
+    console.log(data.features[1].geometry.coordinates[2]);  
 
-    plates = l.geoJSON(data), {
+    d3.json(tectonicPlatesLink).then(function(plateData) { 
+
+    plates = L.geoJSON(plateData), {
         style: function(features) {
             return {
                 color:"orange",
@@ -113,45 +118,37 @@ d3.json(tectonicPlatesLink, function(data) {
         },
         onEachFeature: function(features, layer) {
             console.log(feature.coordinates);
-            layer.bindPopup("Tectonic Plate Name: " + features.properties.PlateName);
+            layer.bindPopup("Tectonic Plate Name: " + data.features[1].properties.PlateName);
         }
     } 
-});
  
-//retrieve earthquake & tectonic plates data from links 
-d3.json(earthquakeLink, function(data) {
-    console.log(data);
-
-    function createMarker(coordinates, features) {
+    function createMarker(coordinates) {
 
         var options = {
             color: "red",
-            fillColor: pickColor(features.geometry.coordinates[2]),
+            fillColor: pickColor(data.features[1].geometry.coordinates[2]),
             opacity: 1,
             fillOpacity: .5,
             weight: 1,
-            radius: features.properties.mag * 5 
+            radius: data.features[1].properties.mag * 5 
         };
 
-        return L.circleMarker(coordinates, options);
+        return L.circleMarker( data.features[1].geometry.coordinates[0], data.features[1].geometry.coordinates[1]);
     } 
 
     var earthquakes = L.geoJSON(data, { 
         onEachFeatures: function(features, layer) {
-            layer.bindPopup("Place:" + feature.properties.place + 
-                            "<br> Coordinates: " + features.geometry.coordinates +
-                            "<br> Magnitude: " + feature.properties.mag + 
-                            "<br> Time: " + new Date(feature.properties.time));
+            layer.bindPopup("Place:" + data.feature[1].properties.place + 
+                            "<br> Coordinates: " + data.features[1].geometry.coordinates +
+                            "<br> Magnitude: " + data.feature[1].properties.mag + 
+                            "<br> Time: " + new Date(data.feature[1].properties.time));
         },
-        pointToLayer: createCircleMarker
-
+        pointToLayer: createMarker
     });
 
     createGeoMap(earthquakes, plates);
- 
+    
+    });
 });
 
-// d3.json(earthquakeLink).then(createGeoMap(earthquakes, plates));
-
-
-
+// d3.json(earthquakeLink).then(createGeoMap(earthquakes, plates)); 
