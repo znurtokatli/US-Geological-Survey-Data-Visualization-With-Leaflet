@@ -5,7 +5,7 @@ var earthQuakeMap;
 var tectonicPlatesMap;
 
 //list used for 3 different map types
-var mapLayers = { "Satellite" : "mapbox.satellite",
+var mapLayers = { "Satellite" : "satellite-v9",
                   "Grayscale" : "light-v10",
                   "Outdoors"  :  "mapbox.outdoors" };
 var baseMaps = {};   
@@ -56,10 +56,10 @@ function createGeoMap(earthquakesData, tectonicPlatesData) {
     for (var layer in mapLayers) {
         console.log(layer + " -> " + mapLayers[layer])
 
-        var tileLayer = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
-            attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, " +
-                         "<a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © " + 
-                         "<a href=\"https://www.mapbox.com/\">Mapbox</a>",
+        var tileLayer = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+            attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> " +
+                         " contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>," +
+                         " Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
             maxZoom: 18,
             id: mapLayers[layer], //map-id
             accessToken: API_KEY
@@ -104,23 +104,23 @@ function createGeoMap(earthquakesData, tectonicPlatesData) {
 
 //retrieve earthquake & tectonic plates data from links 
 d3.json(earthquakeLink).then(function(data) {
-    console.log(data.features[1].geometry.coordinates[2]);  
+    console.log("coordinates2 " + data.features[1].geometry.coordinates[2]);  
 
-    d3.json(tectonicPlatesLink).then(function(plateData) { 
+    // d3.json(tectonicPlatesLink).then(function(plateData) { 
 
-    plates = L.geoJSON(plateData), {
-        style: function(features) {
-            return {
-                color:"orange",
-                fillColor:"white",
-                fillOpacity:.5
-            }
-        },
-        onEachFeature: function(features, layer) {
-            console.log(feature.coordinates);
-            layer.bindPopup("Tectonic Plate Name: " + data.features[1].properties.PlateName);
-        }
-    } 
+    // plates = L.geoJSON(plateData), {
+    //     style: function(features) {
+    //         return {
+    //             color:"orange",
+    //             fillColor:"white",
+    //             fillOpacity:.5
+    //         }
+    //     },
+    //     onEachFeature: function(features, layer) {
+    //         console.log(feature.coordinates);
+    //         layer.bindPopup("Tectonic Plate Name: " + data.features[1].properties.PlateName);
+    //     }
+    // } 
  
     function createMarker(coordinates) {
 
@@ -146,9 +146,10 @@ d3.json(earthquakeLink).then(function(data) {
         pointToLayer: createMarker
     });
 
+    var plates;
     createGeoMap(earthquakes, plates);
     
-    });
+    // });
 });
 
 // d3.json(earthquakeLink).then(createGeoMap(earthquakes, plates)); 
