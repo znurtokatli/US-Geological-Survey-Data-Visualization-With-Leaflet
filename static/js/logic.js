@@ -10,24 +10,65 @@ var mapLayers = {
   "Grayscale": "light-v10",
   "Outdoors": "mapbox.outdoors"
 };
+
 var baseMaps = {};
 var tileLayers = [];
 
-var map = L.map("map", {
-  center: [40.73, -74.0059],
-  zoom: 2
-});
-
-L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
-  attribution: "© <a href='https://www.mapbox.com/about/maps/'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> <strong><a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve this map</a></strong>",
+//map id loop didn't work?
+var graymap = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+  attribution: "© <a href='https://www.mapbox.com/about/maps/'>Mapbox</a> © " + 
+               "<a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> <strong>"+ 
+               "<a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve this map</a></strong>",
   tileSize: 512,
   maxZoom: 18,
   zoomOffset: -1,
-  id: "mapbox/streets-v11",
+  id: "mapbox/light-v10",
   accessToken: API_KEY
-}).addTo(map);
+});
 
+var satellitemap = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+  attribution: "© <a href='https://www.mapbox.com/about/maps/'>Mapbox</a> © " + 
+               "<a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> <strong>"+ 
+               "<a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve this map</a></strong>",  tileSize: 512,
+  maxZoom: 18,
+  zoomOffset: -1,
+  id: "mapbox/satellite-v9",
+  accessToken: API_KEY
+});
 
+var outdoors = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+  attribution: "© <a href='https://www.mapbox.com/about/maps/'>Mapbox</a> © " + 
+               "<a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> <strong>"+ 
+               "<a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve this map</a></strong>",  tileSize: 512,
+  maxZoom: 18,
+  zoomOffset: -1,
+  id: "mapbox/outdoors-v11",
+  accessToken: API_KEY
+});
+ 
+var map = L.map("map", {
+  center: [40.7, -94.5],
+  zoom: 3,
+  layers: [graymap, satellitemap, outdoors]
+});
+
+graymap.addTo(map);
+
+var baseMaps = {
+  Satellite: satellitemap,
+  Grayscale: graymap,
+  Outdoors: outdoors
+};
+ 
+var tectonicPlates = new L.LayerGroup();
+var earthquakes = new L.LayerGroup();
+
+var overlays = { "tectonicPlates": tectonicPlates, "earthquakes": earthquakes}; //data layers
+
+L.control
+ .layers(baseMaps, overlays) //change layers
+ .addTo(map);
+ 
 //set map color for coordinates depth
 function pickColor(depth) {
   switch (true) {
@@ -71,46 +112,35 @@ d3.json(earthquakeLink).then(function (data) {
   console.log(data.features[1]);
   // console.log(data);
 
-  L.geoJSON(data, {
-    pointToLayer: function(geoJsonPoint, latlng) {
-      return L.circleMarker(latlng, {
-        radius: geoJsonPoint.properties.mag * 2.5,
-        color: "red",
-        // fillColor: pickColor(geoJsonPoint.features[1].geometry.coordinates[2]),
-        opacity: 1,
-        fillOpacity: .5,
-        weight: 1 
-      });
-  }
-  }).addTo(map); 
-     
-    L.geoJSON(data, { 
-        onEachFeatures: function(features, layer) {
-            layer.bindPopup("Place:" + data.feature[1].properties.place + 
-                            "<br> Coordinates: " + data.features[1].geometry.coordinates +
-                            "<br> Magnitude: " + data.feature[1].properties.mag + 
-                            "<br> Time: " + new Date(data.feature[1].properties.time));
-        },
-        pointToLayer: createMarker
-    });
+  L.geoJson(data, { 
+    pointToLayer: function(feature, latlng) {
+      return L.circleMarker(latlng);
+    }, 
+    style: styleInfo, 
+    onEachFeature: function(feature, layer) {
+      layer.bindPopup(
+        "Magnitude: "
+          + feature.properties.mag
+          + "<br>Depth: "
+          + feature.geometry.coordinates[2]
+          + "<br>Location: "
+          + feature.properties.place
+      );
+    } 
+  }).addTo(earthquakes);
 
-      //layer control
-    L.control.layers(baseMaps, overlayMaps, {
-      collapsed: false
-    }).addTo(geoMap);
-
-    //info
+  earthquakes.addTo(map);
+ 
+    //info 
     var legendInfo = L.control({
       position: "bottom-right"
     });
 
     legendInfo.onAdd = function () {
-      var div = L.DomUtil.create("div", "legend");
+      var div = L.DomUtil.create("div", "info legend");
       return div;
     };
 
-    info.addTo(geoMap);
-
-    document.querySelector(".legend").innerHTML = showLegend();
-    
+    legendInfo.addTo(map);
+ 
   }); 
