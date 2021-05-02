@@ -86,61 +86,63 @@ function pickColor(depth) {
       return "red";
   };
 };
-
-//legend details on map
-function showLegend() {
-
-  var legendInfo = [{ depth: "-10-10", color: "chartreuse" },
-  { depth: "10-30", color: "greenyellow" },
-  { depth: "30-50", color: "gold" },
-  { depth: "50-70", color: "DarkOrange" },
-  { depth: "70-90", color: "Peru" },
-  { depth: "90+", color: "red" }];
-
-  var htmlStr = "<h3> Depth </h3> <hr>";
-
-  for (i = 0; i < legendInfo.length; i++) {
-    htmlStr += "<p style = \"background-color: " + legendInfo[i].color +
-      "\">" + legendInfo[i].depth + "</p> ";
-  };
-
-  return htmlStr;
-};
   
 //retrieve earthquake & tectonic plates data from links 
 d3.json(earthquakeLink).then(function (data) {
   console.log(data.features[1]);
   // console.log(data);
+ 
+  L.geoJson(data, { 
+    pointToLayer: function(geoJsonPoint, latlng) {
+      return L.circleMarker(latlng , {
+        opacity: 1,
+        fillOpacity: 1,
+        fillColor: pickColor(geoJsonPoint.geometry.coordinates[2]),
+        color: "#000000",
+        radius: geoJsonPoint.properties.mag * 2.5,
+        stroke: true,
+        weight: 0.5
+      });
+    } 
+  }).addTo(earthquakes);
 
   L.geoJson(data, { 
-    pointToLayer: function(feature, latlng) {
-      return L.circleMarker(latlng);
-    }, 
-    style: styleInfo, 
-    onEachFeature: function(feature, layer) {
-      layer.bindPopup(
-        "Magnitude: "
-          + feature.properties.mag
-          + "<br>Depth: "
-          + feature.geometry.coordinates[2]
-          + "<br>Location: "
-          + feature.properties.place
-      );
-    } 
+  onEachFeature: function(geoJsonPoint, layer) {
+    layer.bindPopup(
+      "Magnitude: " + geoJsonPoint.properties.mag + 
+      "<br>Depth: " + geoJsonPoint.geometry.coordinates[2] +
+      "<br>Location: " + geoJsonPoint.properties.place 
+    )}
   }).addTo(earthquakes);
 
   earthquakes.addTo(map);
  
-    //info 
+    //legend info 
     var legendInfo = L.control({
       position: "bottom-right"
     });
 
     legendInfo.onAdd = function () {
-      var div = L.DomUtil.create("div", "info legend");
-      return div;
-    };
 
+      var htmlStr = L.DomUtil.create("div", "info legend");
+
+      var legendStyle = [{ depth: "-10-10", color: "chartreuse" },
+      { depth: "10-30", color: "greenyellow" },
+      { depth: "30-50", color: "gold" },
+      { depth: "50-70", color: "DarkOrange" },
+      { depth: "70-90", color: "Peru" },
+      { depth: "90+", color: "red" }];
+  
+      var htmlStr = "<h3>Depth </h3> <hr>";
+  
+      for (i = 0; i < legendStyle.length; i++) {
+        htmlStr += "<p style = \"background-color: " + legendStyle[i].color +
+          "\">" + legendStyle[i].depth + "</p> ";
+      };
+  
+      return htmlStr; 
+    };
+ 
     legendInfo.addTo(map);
  
   }); 
