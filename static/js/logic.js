@@ -100,7 +100,7 @@ d3.json(earthquakeLink).then(function (data) {
     })
     .addTo(tectonicPlates);
  
-    tectonicplates.addTo(map);
+    tectonicPlates.addTo(map);
   });
 
   L.geoJson(data, { 
@@ -134,7 +134,7 @@ d3.json(earthquakeLink).then(function (data) {
 
   earthquakes.addTo(map);
  
-    //legend info 
+    //legend info  not working 
     var legendInfo = L.control({
       position: "bottom-right"
     });
@@ -153,10 +153,11 @@ d3.json(earthquakeLink).then(function (data) {
       var htmlStr = "<h3>Depth </h3> <hr>";
   
       for (i = 0; i < legendStyle.length; i++) {
-        htmlStr += "<p style = \"background-color: " + legendStyle[i].color +
-          "\">" + legendStyle[i].depth + "</p> ";
+        htmlStr.innerHTML += "<p style = \"background-color: " + legendStyle[i].color +
+                             "\">" + legendStyle[i].depth + "</p> ";
       };
   
+      console.log(htmlStr);
       return htmlStr; 
     };
  
