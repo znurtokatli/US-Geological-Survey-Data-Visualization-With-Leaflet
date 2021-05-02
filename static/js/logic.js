@@ -92,28 +92,45 @@ d3.json(earthquakeLink).then(function (data) {
   console.log(data.features[1]);
   // console.log(data);
  
+  d3.json(tectonicPlatesLink).then(function(plateData) {  
+    L.geoJson(plateData, {
+      color: "pink",
+      opacity: .5,
+      weight: 2
+    })
+    .addTo(tectonicPlates);
+ 
+    tectonicplates.addTo(map);
+  });
+
   L.geoJson(data, { 
     pointToLayer: function(geoJsonPoint, latlng) {
       return L.circleMarker(latlng , {
         opacity: 1,
         fillOpacity: 1,
         fillColor: pickColor(geoJsonPoint.geometry.coordinates[2]),
-        color: "#000000",
-        radius: geoJsonPoint.properties.mag * 2.5,
+        color: "black",
+        radius: geoJsonPoint.properties.mag * 3.5,
         stroke: true,
         weight: 0.5
       });
-    } 
-  }).addTo(earthquakes);
+    } ,
+    onEachFeature: function(geoJsonPoint, layer) {
+      layer.bindPopup(
+        "Magnitude: " + geoJsonPoint.properties.mag + 
+        "<br>Depth: " + geoJsonPoint.geometry.coordinates[2] +
+        "<br>Location: " + geoJsonPoint.properties.place 
+      )}
+  }).addTo(earthquakes); 
 
-  L.geoJson(data, { 
-  onEachFeature: function(geoJsonPoint, layer) {
-    layer.bindPopup(
-      "Magnitude: " + geoJsonPoint.properties.mag + 
-      "<br>Depth: " + geoJsonPoint.geometry.coordinates[2] +
-      "<br>Location: " + geoJsonPoint.properties.place 
-    )}
-  }).addTo(earthquakes);
+  // L.geoJson(data, { 
+  // onEachFeature: function(geoJsonPoint, layer) {
+  //   layer.bindPopup(
+  //     "Magnitude: " + geoJsonPoint.properties.mag + 
+  //     "<br>Depth: " + geoJsonPoint.geometry.coordinates[2] +
+  //     "<br>Location: " + geoJsonPoint.properties.place 
+  //   )}
+  // }).addTo(earthquakes);
 
   earthquakes.addTo(map);
  
